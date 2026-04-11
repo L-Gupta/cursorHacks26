@@ -1,0 +1,153 @@
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg-primary: #060a12;
+  --bg-surface: #0c1220;
+  --bg-elevated: #111b2e;
+  --bg-card: #0e1628;
+  --accent-cyan: #00d4ff;
+  --accent-cyan-dim: rgba(0, 212, 255, 0.15);
+  --accent-green: #00e676;
+  --accent-green-dim: rgba(0, 230, 118, 0.12);
+  --accent-red: #ff1744;
+  --accent-red-dim: rgba(255, 23, 68, 0.12);
+  --accent-amber: #ffab00;
+  --accent-amber-dim: rgba(255, 171, 0, 0.12);
+  --text-primary: #e0f0ff;
+  --text-secondary: #4a7a9b;
+  --text-dim: #1e3a52;
+  --border: rgba(0, 212, 255, 0.08);
+  --border-bright: rgba(0, 212, 255, 0.2);
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: var(--bg-primary);
+  font-family: 'IBM Plex Sans', sans-serif;
+  color: var(--text-primary);
+  height: 100vh;
+  overflow: hidden;
+}
+
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 3px,
+    rgba(0, 212, 255, 0.008) 3px,
+    rgba(0, 212, 255, 0.008) 4px
+  );
+  pointer-events: none;
+  z-index: 9999;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(0, 212, 255, 0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 212, 255, 0.025) 1px, transparent 1px);
+  background-size: 40px 40px;
+  pointer-events: none;
+}
+
+.mono { font-family: 'IBM Plex Mono', monospace; }
+
+.panel {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.panel-header {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.15em;
+  color: var(--accent-cyan);
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border);
+  text-transform: uppercase;
+  background: rgba(0, 212, 255, 0.03);
+}
+
+@keyframes pulseGlow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(0, 212, 255, 0); }
+  50% { box-shadow: 0 0 12px 2px rgba(0, 212, 255, 0.12); }
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes pulseRed {
+  0%, 100% { border-color: var(--border); }
+  50% { border-color: rgba(255, 23, 68, 0.35); }
+}
+
+@keyframes pulseDot {
+  0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(0, 230, 118, 0.4); }
+  50% { opacity: 0.7; box-shadow: 0 0 6px 2px rgba(0, 230, 118, 0.2); }
+}
+
+.analyzing-pulse {
+  animation: pulseGlow 1.5s ease-in-out infinite;
+}
+
+.fade-in-up {
+  animation: fadeInUp 0.25s ease-out forwards;
+}
+
+.pulse-red {
+  animation: pulseRed 2s ease-in-out infinite;
+}
+
+.pulse-dot {
+  animation: pulseDot 1.5s ease-in-out infinite;
+}
+
+.dashboard-panic {
+  animation: pulseRed 2s ease-in-out infinite;
+  border: 1px solid transparent;
+}
+
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: var(--bg-primary); }
+::-webkit-scrollbar-thumb { background: var(--text-dim); border-radius: 2px; }
+
+.recharts-cartesian-axis-tick-value {
+  font-family: 'IBM Plex Mono', monospace !important;
+  font-size: 9px !important;
+  fill: var(--text-secondary) !important;
+}
+
+.recharts-tooltip-wrapper { outline: none !important; }
+
+select {
+  -webkit-appearance: none;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%234a7a9b'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  padding-right: 24px;
+}
+
+select option {
+  background: var(--bg-primary);
+  color: var(--text-primary);
+}
+
+input::placeholder {
+  color: var(--text-dim);
+}
