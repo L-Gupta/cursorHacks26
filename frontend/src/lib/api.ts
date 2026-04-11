@@ -72,6 +72,27 @@ export async function getTrendingStocks(): Promise<TrendingStock[]> {
   return json<TrendingStock[]>(res);
 }
 
+export interface AnalystInsights {
+  ticker: string;
+  outlook: {
+    short?: { direction: string; description: string };
+    mid?: { direction: string; description: string };
+    long?: { direction: string; description: string };
+  };
+  support?: number | null;
+  resistance?: number | null;
+  company_scores?: Record<string, number | null>;
+  sector?: string;
+  significant_developments?: string[];
+  analyst_reports?: { provider: string; title: string }[];
+}
+
+export async function getAnalystInsights(ticker: string): Promise<AnalystInsights> {
+  const t = encodeURIComponent(ticker.trim().toUpperCase());
+  const res = await fetch(`${base()}/market/insights/${t}`);
+  return json<AnalystInsights>(res);
+}
+
 export async function searchCompanies(query: string): Promise<CompanySearchResult[]> {
   const res = await fetch(`${base()}/company/search?q=${encodeURIComponent(query)}`);
   return json<CompanySearchResult[]>(res);

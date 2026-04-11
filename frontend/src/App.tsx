@@ -5,11 +5,11 @@ import {
   searchCompanies,
   getCompanyProfile,
   getEarningsStream,
-  getAISummary,
   getTrendingStocks,
   getGeneralInsight,
+  getAnalystInsights,
 } from "./lib/api";
-import type { TrendingStock } from "./lib/api";
+import type { TrendingStock, AnalystInsights } from "./lib/api";
 import { generateMockChart } from "./lib/mockChart";
 import type { StockQuote } from "./types/stock";
 import type {
@@ -40,10 +40,8 @@ export default function App() {
   const [stream, setStream] = useState<EarningsStream | null>(null);
   const [streamLoading, setStreamLoading] = useState(false);
   const [summaries, setSummaries] = useState<AISummaryEntry[]>([]);
-  const [captionInput, setCaptionInput] = useState("");
-  const [speakerInput, setSpeakerInput] = useState("CEO");
-  const [summaryLoading, setSummaryLoading] = useState(false);
   const [insightLoading, setInsightLoading] = useState(false);
+  const [analyst, setAnalyst] = useState<AnalystInsights | null>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout>>();
 
   const [trending, setTrending] = useState<TrendingStock[]>([]);
@@ -107,6 +105,7 @@ export default function App() {
     setStream(null);
     setSummaries([]);
     setInsightLoading(false);
+    setAnalyst(null);
 
     let fetchedProfile: CompanyProfile | null = null;
     let fetchedQuote: StockQuote | null = null;
@@ -129,6 +128,8 @@ export default function App() {
       setStream(s);
     } catch { setStream(null); }
     finally { setStreamLoading(false); }
+
+    getAnalystInsights(ticker).then(setAnalyst).catch(() => setAnalyst(null));
 
     // Auto-generate AI general insight
     setInsightLoading(true);
@@ -172,25 +173,6 @@ export default function App() {
     }, 30_000);
     return () => clearInterval(iv);
   }, [selectedTicker]);
-
-  const runSummary = useCallback(async () => {
-    if (!captionInput.trim() || !selectedTicker) return;
-    setSummaryLoading(true);
-    try {
-      const marketCtx = quote
-        ? `${quote.ticker}: $${quote.current} (${(quote.percent_change ?? 0) >= 0 ? "+" : ""}${quote.percent_change}%)`
-        : undefined;
-      const s = await getAISummary({
-        segment: captionInput,
-        speaker: speakerInput,
-        ticker: selectedTicker,
-        market_context: marketCtx,
-      });
-      setSummaries((prev) => [s, ...prev]);
-      setCaptionInput("");
-    } catch (e) { console.error(e); }
-    finally { setSummaryLoading(false); }
-  }, [captionInput, speakerInput, selectedTicker, quote]);
 
   // Shared search dropdown
   const searchDropdown = results.length > 0 && (
@@ -428,6 +410,93 @@ export default function App() {
               </ResponsiveContainer>
             ) : (
               <p className="py-16 text-center text-xs text-rh-subtle">Loading chart...</p>
+            )}
+          </section>
+
+          {/* Analyst Outlook */}
+          <section className="rounded-2xl border border-rh-border bg-rh-surface p-6">
+            <h3 className="mb-4 text-sm font-medium text-rh-muted">Analyst Outlook</h3>
+            {analyst ? (
+              <div className="space-y-5">
+                {/* Outlook bars */}
+                <div className="grid grid-cols-3 gap-4">
+                  {(["short", "mid", "long"] as const).map((term) => {
+                    const o = analyst.outlook?.[term];
+                    if (!o) return null;
+                    const dir = o.direction?.toLowerCase() || "neutral";
+                    const isBull = dir === "bullish";
+                    const isBear = dir === "bearish";
+                    const label = term === "short" ? "Short Term" : term === "mid" ? "Mid Term" : "Long Term";
+                    return (
+                      <div key={term} className="rounded-xl bg-rh-card p-4">
+                        <p className="text-xs text-rh-subtle">{label}</p>
+                        <p className={`mt-1 text-lg font-bold ${isBull ? "text-rh-green" : isBear ? "text-rh-red" : "text-rh-muted"}`}>
+                          {o.direction}
+                        </p>
+                        <p className="mt-0.5 text-[11px] text-rh-subtle">{o.description}</p>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Support / Resistance */}
+                {(analyst.support || analyst.resistance) && (
+                  <div className="flex gap-6 text-sm">
+                    {analyst.support && (
+                      <div>
+                        <span className="text-xs text-rh-subtle">Support </span>
+                        <span className="font-semibold text-rh-green">${analyst.support.toFixed(2)}</span>
+                      </div>
+                    )}
+                    {analyst.resistance && (
+                      <div>
+                        <span className="text-xs text-rh-subtle">Resistance </span>
+                        <span className="font-semibold text-rh-red">${analyst.resistance.toFixed(2)}</span>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Significant Developments */}
+                {analyst.significant_developments && analyst.significant_developments.length > 0 && (
+                  <div>
+                    <p className="mb-2 text-xs font-medium text-rh-subtle">Recent Developments</p>
+                    <div className="space-y-2">
+                      {analyst.significant_developments.map((h, i) => (
+                        <p key={i} className="text-sm leading-snug text-rh-muted">{h}</p>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Analyst Reports */}
+                {analyst.analyst_reports && analyst.analyst_reports.length > 0 && (
+                  <div>
+                    <p className="mb-2 text-xs font-medium text-rh-subtle">Top Analyst Voices</p>
+                    <div className="space-y-2">
+                      {analyst.analyst_reports.map((r, i) => (
+                        <div key={i} className="flex items-start gap-2">
+                          <span className="shrink-0 rounded-full bg-rh-card px-2 py-0.5 text-[10px] font-medium text-rh-green">{r.provider}</span>
+                          <p className="text-xs leading-snug text-rh-muted" dangerouslySetInnerHTML={{ __html: r.title }} />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                <p className="text-[10px] text-rh-subtle">Source: Yahoo Finance &middot; Trading Central</p>
+              </div>
+            ) : (
+              <div className="animate-pulse space-y-3">
+                <div className="grid grid-cols-3 gap-4">
+                  {[1, 2, 3].map((i) => (
+                    <div key={i} className="rounded-xl bg-rh-card p-4">
+                      <div className="h-3 w-16 rounded bg-rh-border" />
+                      <div className="mt-2 h-5 w-20 rounded bg-rh-border" />
+                    </div>
+                  ))}
+                </div>
+              </div>
             )}
           </section>
 

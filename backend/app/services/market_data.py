@@ -218,6 +218,90 @@ async def _safe_yf(client: httpx.AsyncClient, ticker: str) -> dict[str, Any] | N
         return None
 
 
+YF_INSIGHTS = "https://query2.finance.yahoo.com/ws/insights/v2/finance/insights"
+
+
+async def fetch_analyst_insights(ticker: str) -> dict[str, Any]:
+    """Analyst outlook, company metrics, and significant developments from Yahoo Finance."""
+    sym = ticker.strip().upper()
+    cache_key = f"insights:{sym}"
+
+    cached = _cached(cache_key, TRENDING_TTL)
+    if cached is not None:
+        return cached
+
+    try:
+        async with httpx.AsyncClient(timeout=15.0) as client:
+            r = await client.get(
+                YF_INSIGHTS,
+                params={"symbol": sym},
+                headers={"User-Agent": _UA},
+            )
+            r.raise_for_status()
+            data = r.json()
+
+        res = data.get("finance", {}).get("result", {})
+        inst = res.get("instrumentInfo", {})
+        tech = inst.get("technicalEvents", {})
+        kt = inst.get("keyTechnicals", {})
+        snap = res.get("companySnapshot", {})
+        sig_devs = res.get("sigDevs", [])
+        reports = res.get("reports", [])
+
+        short_outlook = tech.get("shortTermOutlook", {})
+        mid_outlook = tech.get("intermediateTermOutlook", {})
+        long_outlook = tech.get("longTermOutlook", {})
+
+        company_scores = snap.get("company", {})
+
+        top_reports = []
+        for rpt in reports[:3]:
+            top_reports.append({
+                "provider": rpt.get("provider", ""),
+                "title": rpt.get("headHtml", ""),
+            })
+
+        headlines = []
+        for sd in sig_devs[:3]:
+            headlines.append(sd.get("headline", ""))
+
+        result = {
+            "ticker": sym,
+            "outlook": {
+                "short": {
+                    "direction": short_outlook.get("direction", "Neutral"),
+                    "description": short_outlook.get("scoreDescription", ""),
+                },
+                "mid": {
+                    "direction": mid_outlook.get("direction", "Neutral"),
+                    "description": mid_outlook.get("scoreDescription", ""),
+                },
+                "long": {
+                    "direction": long_outlook.get("direction", "Neutral"),
+                    "description": long_outlook.get("scoreDescription", ""),
+                },
+            },
+            "support": kt.get("support"),
+            "resistance": kt.get("resistance"),
+            "company_scores": {
+                "innovativeness": company_scores.get("innovativeness"),
+                "hiring": company_scores.get("hiring"),
+                "earnings_reports": company_scores.get("earningsReports"),
+                "dividends": company_scores.get("dividends"),
+                "insider_sentiments": company_scores.get("insiderSentiments"),
+                "sustainability": company_scores.get("sustainability"),
+            },
+            "sector": snap.get("sectorInfo", ""),
+            "significant_developments": headlines,
+            "analyst_reports": top_reports,
+        }
+        _set_cache(cache_key, result)
+        return result
+    except Exception:
+        logger.debug("Yahoo insights failed for %s", sym)
+        return {"ticker": sym, "outlook": {}, "company_scores": {}, "significant_developments": [], "analyst_reports": []}
+
+
 def _f(v: object) -> float | None:
     if v is None:
         return None

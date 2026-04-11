@@ -13,7 +13,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from backend.app.config import Settings
 from backend.app.dependencies import cached_settings
 from backend.app.models.schemas import StockQuote
-from backend.app.services.market_data import fetch_stock_quote, fetch_trending
+from backend.app.services.market_data import fetch_stock_quote, fetch_trending, fetch_analyst_insights
 
 logger = logging.getLogger(__name__)
 
@@ -49,4 +49,19 @@ async def get_trending(
         raise HTTPException(
             status_code=status.HTTP_502_BAD_GATEWAY,
             detail=f"Trending provider error: {e!s}",
+        ) from e
+
+
+@router.get("/insights/{ticker}")
+async def get_insights(ticker: str) -> dict[str, Any]:
+    """Analyst recommendations and technical outlook from Yahoo Finance."""
+    if not ticker.strip():
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="ticker required")
+    try:
+        return await fetch_analyst_insights(ticker)
+    except Exception as e:
+        logger.exception("Insights fetch failed for %s", ticker)
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail=f"Insights provider error: {e!s}",
         ) from e
