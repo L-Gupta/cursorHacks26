@@ -106,7 +106,11 @@ export default function ReportExport({ sessionId, transcript, scores, contradict
       doc.setFontSize(9)
       doc.setFont('helvetica', 'bold')
       doc.setTextColor(80, 80, 80)
-      const header = `[${formatTime(entry.timestamp)}] ${entry.speaker}${entry.score_delta !== 0 ? ` (${entry.score_delta > 0 ? '+' : ''}${entry.score_delta})` : ''}${entry.signals.length ? ` — ${entry.signals.join(', ')}` : ''}`
+      const scorePart = entry.score_delta !== 0
+        ? ` (${entry.score_delta > 0 ? '+' : ''}${entry.score_delta})`
+        : ''
+      const signalsPart = entry.signals.length ? ` — ${entry.signals.join(', ')}` : ''
+      const header = `[${formatTime(entry.timestamp)}] ${entry.speaker}${scorePart}${signalsPart}`
       const hLines = doc.splitTextToSize(header, W - 2 * margin)
       doc.text(hLines, margin, y)
       y += hLines.length * 4 + 1

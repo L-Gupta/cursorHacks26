@@ -102,11 +102,13 @@ async def ingest_ticker(ticker: str, chroma_client: chromadb.Client) -> dict:
                 source = hit.get("_source", {})
                 file_date = source.get("file_date", "")
                 entity_name = source.get("entity_name", ticker)
-                accession_no = hit.get("_id", "").replace("-", "")
-
-                if accession_no:
-                    # Try to get filing index
-                    filing_url = f"https://www.sec.gov/Archives/edgar/data/{accession_no[:10]}/{accession_no}.txt"
+                # Accession number format: XXXXXXXXXX-YY-ZZZZZZ (CIK-year-sequence)
+                raw_id = hit.get("_id", "")
+                parts = raw_id.split("-")
+                if len(parts) >= 3:
+                    cik = parts[0].lstrip("0") or parts[0]
+                    accession_no = raw_id.replace("-", "")
+                    filing_url = f"https://www.sec.gov/Archives/edgar/data/{cik}/{raw_id}/{accession_no}.txt"
                     text = await fetch_filing_text(filing_url, client)
                     if text:
                         filing_texts.append((text, f"{entity_name} {file_date}"))

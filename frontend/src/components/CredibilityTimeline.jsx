@@ -16,6 +16,13 @@ const SPEAKER_LINE_COLORS = {
   Analyst: '#22c55e',
 }
 
+function getLastScoreAtOrBefore(hist, time) {
+  for (let i = hist.length - 1; i >= 0; i--) {
+    if (hist[i].time <= time) return hist[i]
+  }
+  return null
+}
+
 function buildChartData(scoreHistory) {
   const allTimes = new Set()
   Object.values(scoreHistory).forEach(hist => hist.forEach(p => allTimes.add(p.time)))
@@ -24,9 +31,7 @@ function buildChartData(scoreHistory) {
   return sortedTimes.map(time => {
     const point = { time }
     Object.entries(scoreHistory).forEach(([speaker, hist]) => {
-      const match = hist.findLast
-        ? hist.findLast(p => p.time <= time)
-        : [...hist].reverse().find(p => p.time <= time)
+      const match = getLastScoreAtOrBefore(hist, time)
       if (match) point[speaker] = match.score
     })
     return point
