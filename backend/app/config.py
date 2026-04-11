@@ -21,6 +21,8 @@ class Settings(BaseSettings):
     anthropic_api_key: str = ""
     # Finnhub (https://finnhub.io) — stock quotes; keep on server only.
     finnhub_api_key: str = ""
+    # Financial Modeling Prep — optional fundamentals / calendar (server-side only).
+    fmp_api_key: str = ""
     chroma_persist_directory: str = "./chroma_data"
     embedding_model: str = "sentence-transformers/all-MiniLM-L6-v2"
     claude_model: str = "claude-sonnet-4-5-20250929"

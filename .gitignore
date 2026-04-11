@@ -76,3 +76,6 @@ frontend/public/demo/*.mp3
 
 # Root-level node_modules (e.g. tooling at repo root)
 node_modules/
+
+# Legacy teammate path (removed from repo — do not re-commit vendor trees here)
+earningslens/
