@@ -15,7 +15,7 @@ Pydantic models. Heavy work belongs in ``services`` modules.
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from backend.app.api import routes_analyze, routes_health, routes_ingest, routes_market, routes_report
+from backend.app.api import routes_analyze, routes_company, routes_health, routes_ingest, routes_market, routes_report
 
 app = FastAPI(
     title="EarningsLens API",
@@ -36,6 +36,7 @@ app.include_router(routes_ingest.router)
 app.include_router(routes_analyze.router)
 app.include_router(routes_report.router)
 app.include_router(routes_market.router)
+app.include_router(routes_company.router)
 
 
 @app.get("/")

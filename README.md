@@ -1,45 +1,132 @@
 # EarningsLens
 
-Real-time earnings call transcription, deception-signal scoring, and contradiction search against indexed SEC filings.
+**EarningsLens** is a full-stack application for analyzing earnings calls: live or recorded audio is transcribed with speaker diarization, executive statements are scored for deception signals via **Anthropic Claude**, and optional semantic search compares claims against **SEC filings** indexed in **ChromaDB**. A React dashboard surfaces credibility trends, contradiction highlights, and exportable reports.
 
-## Branches
+> **Status.** Core API routes (`/health`, `/analyze`, `/report`, `/market/quote`) and a development UI are integrated. Ingestion of SEC documents into Chroma, Deepgram live transcription, production-grade dashboard components, and PDF export are planned or partially scaffolded—see the codebase for `TODO` / placeholder modules.
 
-- **`main`** — Integrates the teammate **`cursor/earningslens-hack-proto-8425c`** prototype with **`lakshya_dev`** (FastAPI backend, `frontend/` Vite app, market quote proxy). The duplicate **`earningslens/`** tree (which had included `node_modules`) was **removed**; development uses **`frontend/`** only.
-- **`lakshya_dev`** — Reset to track **`main`** after merges; use this for day-to-day work (`git checkout lakshya_dev`).
-- **`origin/copilot/add-earnings-call-deception-detector`** — Separate Copilot line; merge later if you want those dependency bumps / alternate UI.
+---
 
-## Repository layout
+## Features
 
-- **`backend/`** — FastAPI (`backend/app/main.py`), routes under `backend/app/api/`, services under `backend/app/services/`.
-- **`frontend/`** — Vite + React + TypeScript + Tailwind.
+| Area | Description |
+|------|-------------|
+| **Analysis** | `POST /analyze` accepts a transcript segment and speaker context; Claude returns structured deception signals and a contradiction search query; optional Chroma retrieval for prior-document matches. |
+| **Sessions** | `GET /report/{session_id}` returns aggregated session data for reporting and future PDF export. |
+| **Market data** | `GET /market/quote/{ticker}` proxies **Finnhub** from the server so API keys are not exposed to the browser. |
+| **Frontend** | Vite + React + TypeScript + Tailwind; development build proxies API calls under `/api`. |
 
-## Quick start
+---
 
-Put API keys in **`.env`** at the **repository root** (copy from `.env.example`). The FastAPI app resolves that file automatically (see `backend/app/config.py`), so keys load even if you change shells.
+## Architecture
 
-From the repo root (Python path must include the repo root):
+- **Backend:** Python 3.11+, **FastAPI**, **Pydantic Settings**, **ChromaDB** (local persistence), **sentence-transformers** embeddings, **Anthropic** (Claude) for analysis.
+- **Frontend:** **React 18**, **Vite**, **Tailwind CSS**; typed API client under `frontend/src/lib/`.
+- **Configuration:** Repository-root **`.env`** is loaded automatically by [`backend/app/config.py`](backend/app/config.py) (including optional `.env.local` and `backend/.env`). Never commit secrets.
+
+---
+
+## Requirements
+
+- **Python** 3.11 or newer  
+- **Node.js** 18+ (for the frontend)  
+- API accounts as described in [Environment variables](#environment-variables)
+
+---
+
+## Getting started
+
+### 1. Clone and install dependencies
 
 ```bash
+git clone <repository-url>
+cd cursorHacks26
 pip install -r backend/requirements.txt
+cd frontend && npm install && cd ..
+```
+
+### 2. Configure environment
+
+Copy the template and fill in values:
+
+```bash
+cp .env.example .env
+```
+
+Edit **`.env`** at the **repository root**. The backend resolves this path regardless of your current working directory when running Uvicorn as shown below.
+
+### 3. Run the API
+
+From the **repository root**:
+
+```bash
 uvicorn backend.app.main:app --reload --host 127.0.0.1 --port 8000
 ```
 
+Interactive documentation: **http://127.0.0.1:8000/docs**
+
+### 4. Run the web client
+
+In a second terminal:
+
 ```bash
-cd frontend && npm install && npm run dev
+cd frontend
+npm run dev
 ```
 
-The frontend uses committed **`frontend/.env.development`** with `VITE_API_BASE_URL=/api` so the Vite dev server proxies to the backend. Override with **`frontend/.env.local`** if needed, or set `VITE_API_BASE_URL=http://127.0.0.1:8000` for direct calls (CORS is already allowed).
+The app defaults to **http://localhost:5173**. Committed [`frontend/.env.development`](frontend/.env.development) sets `VITE_API_BASE_URL=/api`, which forwards requests through Vite’s dev proxy to the API on port `8000`. To call the API directly, set `VITE_API_BASE_URL=http://127.0.0.1:8000` in **`frontend/.env.local`** (CORS is configured for local origins).
+
+---
 
 ## Environment variables
 
-Copy **`.env.example`** to **`.env`** at the repo root (and optionally **`frontend/.env.local`**). See the table below for what you must obtain **outside the repo**.
+| Variable | Purpose | Notes |
+|----------|---------|--------|
+| `ANTHROPIC_API_KEY` | Claude inference for `/analyze` | [Anthropic Console](https://console.anthropic.com/) |
+| `DEEPGRAM_API_KEY` | Speech-to-text (when integrated) | [Deepgram](https://deepgram.com/) |
+| `FINNHUB_API_KEY` | Stock quotes via `/market/quote/{ticker}` | [Finnhub](https://finnhub.io/register) |
+| `FMP_API_KEY` | Optional fundamentals (future routes) | [Financial Modeling Prep](https://site.financialmodelingprep.com/developer/docs/pricing) |
+| `SEC_EDGAR_USER_AGENT` | Identification string for SEC EDGAR HTTP requests | App name and contact email per [SEC guidance](https://www.sec.gov/os/accessing-edgar-data) |
+| `VITE_API_BASE_URL` | Frontend → backend base URL | Usually `/api` in dev; omit from root `.env` if only used in `frontend/.env.local` |
 
-| Variable | Required for | Where to get it |
-|----------|----------------|------------------|
-| `ANTHROPIC_API_KEY` | `/analyze` (Claude) | [Anthropic Console](https://console.anthropic.com/) |
-| `DEEPGRAM_API_KEY` | Live transcription (when wired) | [Deepgram](https://deepgram.com/) |
-| `FINNHUB_API_KEY` | `GET /market/quote/{ticker}` | [Finnhub](https://finnhub.io/register) |
-| `FMP_API_KEY` | Optional future fundamentals | [Financial Modeling Prep](https://site.financialmodelingprep.com/developer/docs/pricing) |
-| `SEC_EDGAR_USER_AGENT` | SEC EDGAR requests | Your app name + contact email ([SEC policy](https://www.sec.gov/os/accessing-edgar-data)) |
+**Security:** Do not commit `.env`. Do not prefix secrets intended for the server with `VITE_`, as Vite exposes those values to the browser bundle.
 
-Never commit real keys. Do not prefix **secret** keys with `VITE_` (they would ship to the browser).
+---
+
+## Repository layout
+
+```
+cursorHacks26/
+├── backend/
+│   ├── app/                 # FastAPI application (routes, services, models)
+│   ├── requirements.txt
+│   └── tests/
+├── frontend/
+│   ├── src/                 # React application
+│   └── public/
+├── .env.example             # Root template for backend-oriented keys
+└── README.md
+```
+
+---
+
+## Branching (for collaborators)
+
+- **`main`** — Primary integration branch (FastAPI + `frontend/` Vite app, market proxy, environment loading).
+- Feature branches should merge via pull request; keep local secrets out of version control.
+
+---
+
+## Troubleshooting
+
+| Issue | Suggestion |
+|--------|------------|
+| `/analyze` returns 503 | Set `ANTHROPIC_API_KEY` in root `.env` and restart Uvicorn. |
+| `/market/quote` returns 503 | Set `FINNHUB_API_KEY` in root `.env`. |
+| Frontend cannot reach API | Ensure the API is on port `8000` and `VITE_API_BASE_URL` matches your setup (`/api` vs direct URL). |
+| Chroma empty / no contradictions | Run or implement `POST /ingest/{ticker}` and populate Chroma for that ticker. |
+
+---
+
+## Project context
+
+Cursor Hackathon 2026 — *EarningsLens*.
