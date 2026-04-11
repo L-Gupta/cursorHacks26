@@ -84,6 +84,20 @@ class SessionSnapshot(BaseModel):
     credibility_by_speaker: dict[str, int] = Field(default_factory=dict)
 
 
+class IngestResponse(BaseModel):
+    """Response from POST /ingest/{ticker}."""
+
+    status: str
+    ticker: str
+    filings_fetched: int = Field(description="Number of SEC filings downloaded.")
+    chunks_stored: int = Field(description="Number of text chunks upserted into Chroma.")
+    collection_total: int = Field(description="Total documents in the ticker's Chroma collection.")
+    filings_summary: list[str] = Field(
+        default_factory=list,
+        description="Human-readable list of ingested filings, e.g. '10-K (2024-02-15)'.",
+    )
+
+
 class StockQuote(BaseModel):
     """Normalized equity quote from an external market data provider (via backend proxy)."""
 

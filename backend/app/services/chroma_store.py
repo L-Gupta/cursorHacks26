@@ -41,6 +41,43 @@ class ChromaStore:
         except Exception:
             return None
 
+    def _get_or_create_collection(self, ticker: str) -> Collection:
+        name = _collection_name(ticker)
+        return self._client.get_or_create_collection(
+            name=name,
+            metadata={"hnsw:space": "cosine"},
+        )
+
+    def upsert_chunks(
+        self,
+        ticker: str,
+        ids: list[str],
+        documents: list[str],
+        embeddings: list[list[float]],
+        metadatas: list[dict[str, str]],
+    ) -> int:
+        """Add or update chunks in the ticker's filing collection.
+
+        Returns the number of documents upserted.
+        """
+        col = self._get_or_create_collection(ticker)
+        batch_size = 200
+        total = len(ids)
+        for start in range(0, total, batch_size):
+            end = min(start + batch_size, total)
+            col.upsert(
+                ids=ids[start:end],
+                documents=documents[start:end],
+                embeddings=embeddings[start:end],
+                metadatas=metadatas[start:end],
+            )
+        return total
+
+    def collection_count(self, ticker: str) -> int:
+        """Return the number of documents in a ticker's collection, or 0."""
+        col = self._get_collection(ticker)
+        return col.count() if col else 0
+
     def query_similar(
         self,
         ticker: str,

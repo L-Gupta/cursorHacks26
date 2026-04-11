@@ -14,3 +14,5 @@ chromadb>=0.4.0
 sentence-transformers>=2.2.0
 torch  # required by sentence-transformers; CPU wheels are fine for dev
 python-multipart>=0.0.9
+beautifulsoup4>=4.12.0
+numpy>=1.24.0
