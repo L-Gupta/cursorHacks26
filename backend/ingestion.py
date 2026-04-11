@@ -161,7 +161,11 @@ async def ingest_ticker(ticker: str, chroma_client: chromadb.Client) -> dict:
             embeddings = model.encode(chunks).tolist()
 
             for i, (chunk, embedding) in enumerate(zip(chunks, embeddings)):
-                doc_id = f"{ticker}_{source_label}_{documents_indexed + i}".replace(" ", "_")[:64]
+                counter = documents_indexed + i
+                # Build ID ensuring the counter suffix is always preserved for uniqueness
+                suffix = f"_{counter}"
+                prefix = f"{ticker}_{source_label}".replace(" ", "_")
+                doc_id = prefix[:64 - len(suffix)] + suffix
                 try:
                     collection.add(
                         documents=[chunk],

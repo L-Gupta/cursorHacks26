@@ -8,16 +8,6 @@ import ReportExport from './components/ReportExport'
 
 const SESSION_ID = crypto.randomUUID()
 
-const SPEAKER_COLORS = {
-  CEO: 'blue',
-  CFO: 'purple',
-  Analyst: 'green',
-}
-
-function getSpeakerColor(speaker) {
-  return SPEAKER_COLORS[speaker] || 'gray'
-}
-
 export default function App() {
   const [ticker, setTicker] = useState('AAPL')
   const [isRecording, setIsRecording] = useState(false)
