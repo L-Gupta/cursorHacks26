@@ -258,7 +258,7 @@ export default function App() {
           </div>
         </header>
 
-        <div className="mx-auto max-w-6xl px-6 py-8">
+        <div className="px-6 py-8">
           {/* Hero trending stock */}
           {trendingLoading ? (
             <div className="mb-8 animate-pulse rounded-2xl border border-rh-border bg-rh-surface p-8">
@@ -297,36 +297,37 @@ export default function App() {
             {trendingLoading ? "" : "Most Active"}
           </h2>
           {trendingLoading ? (
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
-              {Array.from({ length: 10 }).map((_, i) => (
-                <div key={i} className="animate-pulse rounded-xl border border-rh-border bg-rh-surface p-4">
-                  <div className="h-4 w-14 rounded bg-rh-card" />
-                  <div className="mt-3 h-6 w-20 rounded bg-rh-card" />
+            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
+              {Array.from({ length: 8 }).map((_, i) => (
+                <div key={i} className="animate-pulse rounded-xl border border-rh-border bg-rh-surface p-6">
+                  <div className="h-5 w-16 rounded bg-rh-card" />
+                  <div className="mt-2 h-4 w-24 rounded bg-rh-card" />
+                  <div className="mt-4 h-7 w-24 rounded bg-rh-card" />
                 </div>
               ))}
             </div>
           ) : (
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
               {rest.map((s) => {
                 const up = (s.percent_change ?? 0) >= 0;
                 return (
                   <button
                     key={s.ticker}
                     type="button"
-                    className="group rounded-xl border border-rh-border bg-rh-surface p-4 text-left transition hover:border-rh-green/30 hover:bg-rh-hover"
+                    className="group rounded-xl border border-rh-border bg-rh-surface p-6 text-left transition hover:border-rh-green/30 hover:bg-rh-hover"
                     onClick={() => void selectCompany(s.ticker)}
                   >
-                    <p className="font-mono text-sm font-semibold text-rh-text group-hover:text-rh-green">{s.ticker}</p>
-                    <p className="mt-0.5 truncate text-xs text-rh-subtle">{s.name}</p>
+                    <p className="font-mono text-base font-semibold text-rh-text group-hover:text-rh-green">{s.ticker}</p>
+                    <p className="mt-1 truncate text-sm text-rh-subtle">{s.name}</p>
                     {s.price !== null ? (
                       <>
-                        <p className="mt-3 text-lg font-bold text-rh-text">${s.price.toFixed(2)}</p>
-                        <p className={`mt-1 text-xs font-medium ${up ? "text-rh-green" : "text-rh-red"}`}>
+                        <p className="mt-4 text-2xl font-bold text-rh-text">${s.price.toFixed(2)}</p>
+                        <p className={`mt-1 text-sm font-medium ${up ? "text-rh-green" : "text-rh-red"}`}>
                           {up ? "+" : ""}{s.percent_change?.toFixed(2)}%
                         </p>
                       </>
                     ) : (
-                      <p className="mt-3 text-xs text-rh-subtle">Loading...</p>
+                      <p className="mt-4 text-sm text-rh-subtle">Loading...</p>
                     )}
                   </button>
                 );
@@ -364,7 +365,7 @@ export default function App() {
         </div>
       </header>
 
-      <div className="mx-auto grid max-w-7xl gap-5 p-5 lg:grid-cols-3">
+      <div className="grid gap-5 p-5 lg:grid-cols-3">
         {/* LEFT COLUMN */}
         <div className="space-y-5 lg:col-span-2">
           {/* Company header + quote */}
@@ -407,7 +408,7 @@ export default function App() {
           <section className="rounded-2xl border border-rh-border bg-rh-surface p-5">
             <h3 className="mb-3 text-sm font-medium text-rh-muted">Price</h3>
             {chartData.length > 0 ? (
-              <ResponsiveContainer width="100%" height={240}>
+              <ResponsiveContainer width="100%" height={340}>
                 <AreaChart data={chartData}>
                   <defs>
                     <linearGradient id="priceGrad" x1="0" y1="0" x2="0" y2="1">
@@ -430,45 +431,6 @@ export default function App() {
             )}
           </section>
 
-          {/* Transcript / captions input */}
-          <section className="rounded-2xl border border-rh-border bg-rh-surface p-5">
-            <h3 className="mb-2 text-sm font-medium text-rh-muted">Live Captions / Transcript</h3>
-            <p className="mb-3 text-xs text-rh-subtle">
-              Paste earnings call statements for real-time AI analysis.
-            </p>
-            <div className="mb-3 flex gap-2">
-              <select
-                className="rounded-lg border border-rh-border bg-rh-card px-3 py-1.5 text-xs text-rh-text"
-                value={speakerInput}
-                onChange={(e) => setSpeakerInput(e.target.value)}
-              >
-                <option value="CEO">CEO</option>
-                <option value="CFO">CFO</option>
-                <option value="COO">COO</option>
-                <option value="Analyst">Analyst</option>
-                <option value="Unknown">Unknown</option>
-              </select>
-            </div>
-            <textarea
-              className="w-full rounded-lg border border-rh-border bg-rh-card px-4 py-3 font-mono text-sm text-rh-text placeholder-rh-subtle outline-none transition focus:border-rh-green"
-              rows={3}
-              placeholder='"We expect revenue growth of approximately 15% next quarter..."'
-              value={captionInput}
-              onChange={(e) => setCaptionInput(e.target.value)}
-              onKeyDown={(e) => { if (e.key === "Enter" && e.ctrlKey) void runSummary(); }}
-            />
-            <div className="mt-3 flex items-center gap-3">
-              <button
-                type="button"
-                disabled={summaryLoading || !captionInput.trim()}
-                className="rounded-full bg-rh-green px-6 py-2 text-sm font-semibold text-black transition hover:brightness-110 disabled:opacity-40"
-                onClick={() => void runSummary()}
-              >
-                {summaryLoading ? "Analyzing..." : "Analyze"}
-              </button>
-              <span className="text-[11px] text-rh-subtle">Ctrl+Enter to send</span>
-            </div>
-          </section>
         </div>
 
         {/* RIGHT COLUMN */}
