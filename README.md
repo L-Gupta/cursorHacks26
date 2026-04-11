@@ -15,6 +15,8 @@ Real-time earnings call transcription, deception-signal scoring, and contradicti
 
 ## Quick start
 
+Put API keys in **`.env`** at the **repository root** (copy from `.env.example`). The FastAPI app resolves that file automatically (see `backend/app/config.py`), so keys load even if you change shells.
+
 From the repo root (Python path must include the repo root):
 
 ```bash
@@ -26,7 +28,7 @@ uvicorn backend.app.main:app --reload --host 127.0.0.1 --port 8000
 cd frontend && npm install && npm run dev
 ```
 
-Use **`frontend/.env.local`** with `VITE_API_BASE_URL=/api` and rely on the Vite proxy to the backend, or point `VITE_API_BASE_URL` at `http://127.0.0.1:8000`.
+The frontend uses committed **`frontend/.env.development`** with `VITE_API_BASE_URL=/api` so the Vite dev server proxies to the backend. Override with **`frontend/.env.local`** if needed, or set `VITE_API_BASE_URL=http://127.0.0.1:8000` for direct calls (CORS is already allowed).
 
 ## Environment variables
 

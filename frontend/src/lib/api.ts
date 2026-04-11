@@ -11,7 +11,19 @@ import type {
 } from "@/types/analyze";
 import type { StockQuote } from "@/types/stock";
 
-const base = () => (import.meta.env.VITE_API_BASE_URL ?? "").replace(/\/$/, "");
+/**
+ * API prefix for FastAPI. In dev, default to ``/api`` so Vite proxies to the backend.
+ * Override with ``VITE_API_BASE_URL`` (e.g. direct ``http://127.0.0.1:8000``).
+ */
+export function apiBase(): string {
+  const raw = import.meta.env.VITE_API_BASE_URL;
+  if (raw !== undefined && String(raw).trim() !== "") {
+    return String(raw).replace(/\/$/, "");
+  }
+  return "/api";
+}
+
+const base = () => apiBase();
 
 async function json<T>(res: Response): Promise<T> {
   if (!res.ok) {
@@ -19,6 +31,17 @@ async function json<T>(res: Response): Promise<T> {
     throw new Error(`${res.status} ${res.statusText}: ${text}`);
   }
   return res.json() as Promise<T>;
+}
+
+export interface HealthResponse {
+  status: string;
+  service?: string;
+}
+
+/** GET /health — confirms FastAPI is reachable (via /api/health in dev). */
+export async function getHealth(): Promise<HealthResponse> {
+  const res = await fetch(`${base()}/health`);
+  return json<HealthResponse>(res);
 }
 
 export async function analyzeSegment(
