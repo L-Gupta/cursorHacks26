@@ -1,0 +1,8 @@
+# -----------------------------------------------------------------------------
+# EarningsLens — demo audio placement
+#
+# Add a pre-recorded earnings call MP3 here (e.g. historical call for a company
+# with known SEC actions). Reference it from DemoMode so the file is served at
+# /demo/your-file.mp3. Keep filenames ASCII and avoid committing copyrighted
+# material without permission; use cleared samples for the hackathon.
+# -----------------------------------------------------------------------------
