@@ -11,3 +11,4 @@ export type {
   DeceptionSignalType,
   SessionSnapshot,
 } from "./analyze";
+export type { StockQuote } from "./stock";

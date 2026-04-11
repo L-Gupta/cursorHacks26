@@ -63,6 +63,16 @@ pnpm-debug.log*
 .DS_Store
 Thumbs.db
 
-# Demo assets that may be large (keep placeholders; ignore downloaded MP3s if any)
-# Uncomment if you store heavy binaries under frontend/public/demo/
-# frontend/public/demo/*.mp3
+# TypeScript
+*.tsbuildinfo
+
+# Local databases / caches (if added later)
+*.sqlite
+*.sqlite3
+*.db
+
+# Large demo media (optional — remove the line below if you intentionally vendor small samples)
+frontend/public/demo/*.mp3
+
+# Root-level node_modules (e.g. tooling at repo root)
+node_modules/

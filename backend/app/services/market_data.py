@@ -35,11 +35,11 @@ async def fetch_finnhub_quote(api_key: str, ticker: str) -> StockQuote:
         r.raise_for_status()
         data: dict[str, Any] = r.json()
 
-    # Finnhub: c, d, dp, h, l, o, pc, t (t is seconds in some versions — often ms)
+    # Finnhub: c, d, dp, h, l, o, pc, t — t is unix seconds (see Finnhub docs).
     ts = data.get("t")
     ts_ms: int | None = None
     if isinstance(ts, (int, float)) and ts:
-        ts_ms = int(ts * 1000) if ts < 1e12 else int(ts)
+        ts_ms = int(ts * 1000) if ts < 10_000_000_000 else int(ts)
 
     return StockQuote(
         ticker=sym,
@@ -53,7 +53,7 @@ async def fetch_finnhub_quote(api_key: str, ticker: str) -> StockQuote:
         open=_f(data.get("o")),
         previous_close=_f(data.get("pc")),
         timestamp_ms=ts_ms,
-        raw={k: v for k, v in data.items() if k in data},
+        raw=dict(data),
     )
 
 

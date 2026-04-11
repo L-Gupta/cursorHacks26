@@ -9,6 +9,7 @@ import type {
   AnalyzeResponse,
   SessionSnapshot,
 } from "@/types/analyze";
+import type { StockQuote } from "@/types/stock";
 
 const base = () => (import.meta.env.VITE_API_BASE_URL ?? "").replace(/\/$/, "");
 
@@ -34,4 +35,11 @@ export async function analyzeSegment(
 export async function getSessionReport(sessionId: string): Promise<SessionSnapshot> {
   const res = await fetch(`${base()}/report/${encodeURIComponent(sessionId)}`);
   return json<SessionSnapshot>(res);
+}
+
+/** Live quote from Finnhub via the backend (never put the provider key in the browser). */
+export async function getStockQuote(ticker: string): Promise<StockQuote> {
+  const t = encodeURIComponent(ticker.trim().toUpperCase());
+  const res = await fetch(`${base()}/market/quote/${t}`);
+  return json<StockQuote>(res);
 }
