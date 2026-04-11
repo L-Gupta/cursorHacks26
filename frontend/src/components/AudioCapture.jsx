@@ -1,5 +1,7 @@
 import { useRef, useEffect, useCallback } from 'react'
 
+const DEEPGRAM_WS_URL = 'wss://api.deepgram.com/v1/listen?model=nova-2&diarize=true&smart_format=true'
+
 const SIMULATION_SEGMENTS = [
   { speaker: 'CEO', text: "We're seeing tremendous momentum across all our business segments. Revenue grew approximately 18% year-over-year, which we believe reflects strong underlying demand." },
   { speaker: 'CFO', text: "Operating margins came in at around 21%, roughly in line with our guidance. We expect this to improve significantly going forward as we scale our operations." },
@@ -54,10 +56,7 @@ export default function AudioCapture({ isRecording, onToggle, onSegment }) {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
       streamRef.current = stream
 
-      const socket = new WebSocket(
-        `wss://api.deepgram.com/v1/listen?model=nova-2&diarize=true&smart_format=true`,
-        ['token', apiKey]
-      )
+      const socket = new WebSocket(DEEPGRAM_WS_URL, ['token', apiKey])
       socketRef.current = socket
 
       socket.onopen = () => {

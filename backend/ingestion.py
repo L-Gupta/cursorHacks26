@@ -6,6 +6,9 @@ import json
 import asyncio
 from typing import Optional
 
+MAX_FILING_TEXT_LENGTH = 50_000
+MAX_CHROMA_ID_LENGTH = 64
+
 _model: Optional[SentenceTransformer] = None
 
 
@@ -34,7 +37,7 @@ async def fetch_filing_text(url: str, client: httpx.AsyncClient) -> str:
             # Strip HTML tags
             text = re.sub(r'<[^>]+>', ' ', text)
             text = re.sub(r'\s+', ' ', text)
-            return text[:50000]  # Limit to 50K chars
+            return text[:MAX_FILING_TEXT_LENGTH]
     except Exception:
         pass
     return ""
@@ -165,7 +168,7 @@ async def ingest_ticker(ticker: str, chroma_client: chromadb.Client) -> dict:
                 # Build ID ensuring the counter suffix is always preserved for uniqueness
                 suffix = f"_{counter}"
                 prefix = f"{ticker}_{source_label}".replace(" ", "_")
-                doc_id = prefix[:64 - len(suffix)] + suffix
+                doc_id = prefix[:MAX_CHROMA_ID_LENGTH - len(suffix)] + suffix
                 try:
                     collection.add(
                         documents=[chunk],
