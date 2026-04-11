@@ -1,0 +1,16 @@
+/**
+ * Global styles: Tailwind layers and base tweaks for EarningsLens.
+ *
+ * Dark theme defaults align with design tokens in ``tailwind.config.js``.
+ * Prefer utility classes in components; use this file for resets and transitions
+ * required across the app (e.g. smooth color transitions per project rules).
+ */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html,
+body,
+#root {
+  min-height: 100%;
+}
