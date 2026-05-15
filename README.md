@@ -279,4 +279,4 @@ The closest semantic match is returned as a `ContradictionMatch` with the origin
 
 **CursorHacks 2026** — built in ~3 hours by a two-person team using Cursor AI.
 
-Team: **Yash** · **Lakshya Gupta**
+Team: **Yash** · **Lakshya Gupta** · **Rupak Sharma** 
