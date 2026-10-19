@@ -1,0 +1,3 @@
+# Backend is deployed separately (needs torch/chromadb; far exceeds Vercel's 500 MB function limit)
+backend/
+chroma_data/
