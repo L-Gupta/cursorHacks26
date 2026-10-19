@@ -1,52 +1,57 @@
 """
-Embedding generation using sentence-transformers (all-MiniLM-L6-v2).
+Embedding generation with all-MiniLM-L6-v2 via Chroma's ONNX runtime wrapper.
 
-Loads the model once (heavy) and exposes ``encode`` for query-time contradiction
+Uses the same model as sentence-transformers (384-dim) but through
+onnxruntime, avoiding torch so the backend fits in ~512 MB of RAM. The model
+is loaded lazily once and exposes ``encode`` for query-time contradiction
 search. Vectors are L2-normalized for cosine distance in Chroma.
 """
 
 from __future__ import annotations
 
 import threading
-from typing import TYPE_CHECKING
+from typing import Any
 
 import numpy as np
 
-if TYPE_CHECKING:
-    from sentence_transformers import SentenceTransformer
+_MAX_BATCH = 8
 
 
 class EmbeddingService:
-    """Lazy-loaded embedding model with thread-safe first load."""
+    """Lazy-loaded ONNX embedding model with thread-safe first load."""
 
     def __init__(self, model_name: str) -> None:
+        # Only all-MiniLM-L6-v2 is bundled with Chroma's ONNX wrapper.
         self._model_name = model_name
-        self._model: SentenceTransformer | None = None
+        self._model: Any | None = None
         self._lock = threading.Lock()
 
-    def _ensure_model(self) -> SentenceTransformer:
+    def _ensure_model(self) -> Any:
         if self._model is not None:
             return self._model
         with self._lock:
             if self._model is None:
-                from sentence_transformers import SentenceTransformer as ST
+                from chromadb.utils.embedding_functions import ONNXMiniLM_L6_V2
 
-                self._model = ST(self._model_name)
+                self._model = ONNXMiniLM_L6_V2(preferred_providers=["CPUExecutionProvider"])
         return self._model
+
+    @staticmethod
+    def _normalize(vec: Any) -> list[float]:
+        arr = np.asarray(vec, dtype=np.float32).flatten()
+        norm = float(np.linalg.norm(arr))
+        return (arr / norm if norm else arr).tolist()
 
     def encode(self, text: str) -> list[float]:
         """Return a single normalized embedding vector (dim 384 for MiniLM)."""
-        model = self._ensure_model()
-        vec = model.encode(text.strip() or " ", normalize_embeddings=True)
-        arr = np.asarray(vec, dtype=np.float32).flatten()
-        return arr.tolist()
+        return self.encode_batch([text.strip() or " "])[0]
 
     def encode_batch(self, texts: list[str]) -> list[list[float]]:
         model = self._ensure_model()
-        vecs = model.encode(texts, normalize_embeddings=True)
         out: list[list[float]] = []
-        for row in np.atleast_2d(vecs):
-            out.append(np.asarray(row, dtype=np.float32).flatten().tolist())
+        # Small batches keep peak memory low (Render free tier is 512 MB).
+        for i in range(0, len(texts), _MAX_BATCH):
+            out.extend(self._normalize(v) for v in model(texts[i : i + _MAX_BATCH]))
         return out
 
 

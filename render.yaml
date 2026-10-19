@@ -1,20 +1,14 @@
 # Render Blueprint — deploys the FastAPI backend (the frontend lives on Vercel).
+# Free plan: 512 MB RAM, no persistent disk (Chroma data resets on each deploy/restart).
 services:
   - type: web
     name: earningslens-api
     runtime: docker
     dockerfilePath: ./Dockerfile
     dockerContext: .
-    # torch + MiniLM need more than the 512 MB of free/starter; standard has 2 GB.
-    plan: standard
+    plan: free
     healthCheckPath: /health/live
-    disk:
-      name: chroma
-      mountPath: /data
-      sizeGB: 1
     envVars:
-      - key: CHROMA_PERSIST_DIRECTORY
-        value: /data/chroma
       - key: ANTHROPIC_API_KEY
         sync: false
       - key: DEEPGRAM_API_KEY
