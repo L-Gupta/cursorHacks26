@@ -1,0 +1,30 @@
+# Render Blueprint — deploys the FastAPI backend (the frontend lives on Vercel).
+services:
+  - type: web
+    name: earningslens-api
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    # torch + MiniLM need more than the 512 MB of free/starter; standard has 2 GB.
+    plan: standard
+    healthCheckPath: /health/live
+    disk:
+      name: chroma
+      mountPath: /data
+      sizeGB: 1
+    envVars:
+      - key: CHROMA_PERSIST_DIRECTORY
+        value: /data/chroma
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: DEEPGRAM_API_KEY
+        sync: false
+      - key: FINNHUB_API_KEY
+        sync: false
+      - key: FMP_API_KEY
+        sync: false
+      - key: SEC_EDGAR_USER_AGENT
+        sync: false
+      # Deployed frontend origin, e.g. https://your-app.vercel.app
+      - key: CORS_ORIGINS
+        sync: false
