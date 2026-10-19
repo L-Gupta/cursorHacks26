@@ -58,6 +58,8 @@ class Settings(BaseSettings):
     embedding_model: str = "sentence-transformers/all-MiniLM-L6-v2"
     claude_model: str = "claude-sonnet-4-5-20250929"
     sec_edgar_user_agent: str = "EarningsLens/0.1 (contact@example.com)"
+    # Extra allowed browser origins (comma-separated), e.g. the deployed Vercel URL.
+    cors_origins: str = ""
 
 
 def get_settings() -> Settings:

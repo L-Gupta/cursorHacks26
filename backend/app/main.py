@@ -16,6 +16,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from backend.app.api import routes_analyze, routes_company, routes_health, routes_ingest, routes_market, routes_report
+from backend.app.config import get_settings
 
 app = FastAPI(
     title="EarningsLens API",
@@ -23,9 +24,12 @@ app = FastAPI(
     version="0.1.0",
 )
 
+_DEV_ORIGINS = ["http://localhost:5173", "http://127.0.0.1:5173", "http://localhost:5174", "http://127.0.0.1:5174"]
+_extra_origins = [o.strip().rstrip("/") for o in get_settings().cors_origins.split(",") if o.strip()]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://127.0.0.1:5173", "http://localhost:5174", "http://127.0.0.1:5174"],
+    allow_origins=_DEV_ORIGINS + _extra_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
